@@ -1,0 +1,412 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #8bbbe8;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+#renderCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Прицел по центру экрана с индикатором прогресса */
+#crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#crosshair::before,
+#crosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+#crosshair::before {
+  top: 17px;
+  left: 8px;
+  width: 20px;
+  height: 2px;
+}
+
+#crosshair::after {
+  top: 8px;
+  left: 17px;
+  width: 2px;
+  height: 20px;
+}
+
+#progressSvg {
+  width: 36px;
+  height: 36px;
+  transform: rotate(-90deg);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+#progressCircle {
+  transition: stroke-dashoffset 0.04s linear;
+}
+
+/* Рука / удерживаемый блок от первого лица (крупный объемный блок в стиле Minecraft) */
+#firstPersonHand {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 550px;
+  height: 550px;
+  perspective: 750px;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.hand-block {
+  width: 290px;
+  height: 290px;
+  position: absolute;
+  bottom: -30px;
+  right: 35px;
+  transform-style: preserve-3d;
+  transform: rotateX(-22deg) rotateY(-38deg) rotateZ(12deg);
+  transform-origin: center center;
+  transition: transform 0.12s ease-out;
+}
+
+/* Анимация удара / добычи при зажатии ЛКМ */
+#firstPersonHand.mining .hand-block {
+  animation: mineSwing 0.22s infinite ease-in-out;
+}
+
+/* Разовый взмах при установке блока на ПКМ */
+#firstPersonHand.punch .hand-block {
+  animation: punchSwing 0.15s ease-out;
+}
+
+@keyframes mineSwing {
+  0% {
+    transform: rotateX(-22deg) rotateY(-38deg) rotateZ(12deg) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: rotateX(15deg) rotateY(-50deg) rotateZ(-10deg) translate3d(-55px, 65px, 65px);
+  }
+  100% {
+    transform: rotateX(-22deg) rotateY(-38deg) rotateZ(12deg) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes punchSwing {
+  0% { transform: rotateX(-22deg) rotateY(-38deg) rotateZ(12deg); }
+  50% { transform: rotateX(16deg) rotateY(-46deg) rotateZ(-12deg) translate3d(-50px, 60px, 60px); }
+  100% { transform: rotateX(-22deg) rotateY(-38deg) rotateZ(12deg); }
+}
+
+.hand-block .face {
+  position: absolute;
+  width: 290px;
+  height: 290px;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  backface-visibility: hidden;
+}
+
+.hand-block .face.front  { transform: translateZ(145px); filter: brightness(0.8); }
+.hand-block .face.back   { transform: rotateY(180deg) translateZ(145px); filter: brightness(0.8); }
+.hand-block .face.top    { transform: rotateX(90deg) translateZ(145px); filter: brightness(0.9); }
+.hand-block .face.bottom { transform: rotateX(-90deg) translateZ(145px); filter: brightness(0.45); }
+.hand-block .face.left   { transform: rotateY(-90deg) translateZ(145px); filter: brightness(0.7); }
+.hand-block .face.right  { transform: rotateY(90deg) translateZ(145px); filter: brightness(0.65); }
+
+/* Верхняя панель управления */
+#topBar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.stats-card {
+  background: rgba(20, 24, 30, 0.65);
+  backdrop-filter: blur(6px);
+  color: #f0f0f0;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: monospace;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.btn {
+  background: rgba(25, 30, 38, 0.85);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  background: rgba(45, 55, 72, 0.95);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Нижняя панель быстрого выбора блоков (Hotbar) */
+#hotbar {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  max-width: 96vw;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: rgba(18, 22, 28, 0.8);
+  padding: 6px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  z-index: 20;
+}
+
+#hotbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hotbar-slot {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  background: rgba(40, 48, 60, 0.7);
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
+}
+
+.hotbar-slot:hover {
+  background: rgba(60, 72, 90, 0.85);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.hotbar-slot.active {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.2);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  transform: scale(1.08);
+}
+
+.hotbar-slot img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  pointer-events: none;
+}
+
+.slot-key {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px #000;
+  pointer-events: none;
+}
+
+/* Экран паузы / подсказок (Overlay) */
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 20, 28, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  z-index: 100;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+#overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.overlay-box {
+  background: rgba(30, 38, 50, 0.9);
+  padding: 32px 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  max-width: 520px;
+}
+
+.overlay-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  color: #64b5f6;
+  text-shadow: 0 2px 8px rgba(100, 181, 246, 0.3);
+}
+
+.overlay-subtitle {
+  font-size: 14px;
+  color: #bbb;
+  margin-bottom: 24px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  text-align: left;
+  margin-bottom: 28px;
+  font-size: 13px;
+  background: rgba(15, 20, 28, 0.5);
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.control-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kbd {
+  background: #374151;
+  color: #f9fafb;
+  border: 1px solid #4b5563;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  box-shadow: 0 2px 0 #1f2937;
+}
+
+.play-btn {
+  background: linear-gradient(135deg, #388e3c, #1b5e20);
+  color: #fff;
+  border: 2px solid #81c784;
+  padding: 14px 28px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(46, 125, 50, 0.5);
+  transition: all 0.2s ease;
+  margin-bottom: 14px;
+  width: 100%;
+  display: block;
+  letter-spacing: 0.5px;
+}
+
+.play-btn:hover {
+  background: linear-gradient(135deg, #43a047, #2e7d32);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.7);
+  border-color: #a5d6a7;
+}
+
+.play-btn:active {
+  transform: translateY(1px);
+}
+
+.overlay-prompt {
+  font-size: 14px;
+  font-weight: 500;
+  color: #cfd8dc;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+/* Всплывающее уведомление (Toast) */
+#toast {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(30, 40, 55, 0.95);
+  color: #fff;
+  border: 1px solid rgba(100, 181, 246, 0.5);
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  z-index: 200;
+}
+
+#toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

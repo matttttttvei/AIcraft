@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>VoxelCraft — Минимальная основа Minecraft на WebGL</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Основной 3D холст рендеринга WebGL -->
+  <canvas id="renderCanvas"></canvas>
+
+  <!-- Прицел по центру экрана с индикатором разрушения -->
+  <div id="crosshair">
+    <svg id="progressSvg" viewBox="0 0 36 36">
+      <circle id="progressCircle" cx="18" cy="18" r="14" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-dasharray="88" stroke-dashoffset="88"></circle>
+    </svg>
+  </div>
+
+  <!-- Анимированная рука/блок от первого лица -->
+  <div id="firstPersonHand">
+    <div id="handItem" class="hand-block">
+      <div class="face front"></div>
+      <div class="face back"></div>
+      <div class="face top"></div>
+      <div class="face bottom"></div>
+      <div class="face left"></div>
+      <div class="face right"></div>
+    </div>
+  </div>
+
+  <!-- Верхняя строка информации и меню -->
+  <div id="topBar">
+    <div class="stats-card">
+      <div id="debugInfo">FPS: 60 | X: 0.0 Y: 0.0 Z: 0.0</div>
+      <div id="targetInfo" style="color: #64b5f6;"></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn" id="btnSave" title="Сохранить в браузер">💾 Сохранить</button>
+      <button class="btn" id="btnLoad" title="Загрузить из браузера">📂 Загрузить</button>
+      <button class="btn" id="btnExport" title="Скачать файл мира">⬇️ Экспорт</button>
+      <button class="btn" id="btnImport" title="Загрузить файл мира">⬆️ Импорт</button>
+      <button class="btn" id="btnNewWorld" title="Сгенерировать заново">🎲 Новый мир</button>
+    </div>
+  </div>
+
+  <!-- Панель быстрого выбора блоков (Hotbar) -->
+  <div id="hotbar"></div>
+
+  <!-- Всплывающее уведомление -->
+  <div id="toast"></div>
+
+  <!-- Скрытый инпут для загрузки JSON файла мира -->
+  <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+  <!-- Экран паузы и подсказок по управлению -->
+  <div id="overlay">
+    <div class="overlay-box">
+      <div class="overlay-title">VOXEL CRAFT</div>
+      <div class="overlay-subtitle">Прототип воксельной песочницы на WebGL & JavaScript</div>
+
+      <div class="controls-grid">
+        <div class="control-item"><span class="kbd">W A S D</span> Ходьба</div>
+        <div class="control-item"><span class="kbd">Мышь</span> Обзор (360°)</div>
+        <div class="control-item"><span class="kbd">Пробел</span> Прыжок</div>
+        <div class="control-item"><span class="kbd">ЛКМ</span> Ломать блок</div>
+        <div class="control-item"><span class="kbd">ПКМ</span> Ставить блок</div>
+        <div class="control-item"><span class="kbd">1 - 9</span> Выбор блока</div>
+        <div class="control-item"><span class="kbd">Колесо</span> Смена слота</div>
+        <div class="control-item"><span class="kbd">ESC</span> Пауза / Меню</div>
+      </div>
+
+      <button id="btnPlay" class="play-btn">▶ КЛИКНИ СЮДА, ЧТОБЫ ИГРАТЬ</button>
+      <div class="overlay-prompt">Или нажмите Пробел / Enter в любом месте</div>
+    </div>
+  </div>
+
+  <!-- Скрипты игры в порядке зависимостей -->
+  <script src="js/math.js"></script>
+  <script src="js/asset_data.js"></script>
+  <script src="js/textures.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/raycast.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/pig.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

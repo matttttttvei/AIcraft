@@ -1,0 +1,19 @@
+{
+  "name": "voxel-craft-game",
+  "version": "1.0.0",
+  "description": "VoxelCraft: Unofficial fan-made browser voxel sandbox game built with WebGL and JavaScript",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "voxel",
+    "minecraft-classic",
+    "fan-made",
+    "webgl",
+    "javascript",
+    "game"
+  ],
+  "author": "Fan Community / Educational Project",
+  "license": "MIT"
+}
